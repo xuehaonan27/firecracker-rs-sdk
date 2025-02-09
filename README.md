@@ -1,4 +1,4 @@
-# <h1 align="center">Firecracker Rust SDK 🧨🦀🚀</h1>
+# <h1 align="center">Firecracker🧨 Rust🦀 SDK🚀</h1>
 
 ## 🔍 Overview
 

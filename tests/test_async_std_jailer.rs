@@ -23,7 +23,7 @@ async fn spawn_plain() -> Result<()> {
     .firecracker_option(Some(
         FirecrackerOption::new(firecracker_bin).api_sock(API_SOCK),
     ))
-    .spawn()?;
+    .build()?;
 
     let _ = fs::remove_dir_all(instance.jailer_workspace_dir().unwrap());
 
@@ -55,7 +55,7 @@ async fn spawn_and_config() -> Result<()> {
     .firecracker_option(Some(
         FirecrackerOption::new(firecracker_bin).api_sock(API_SOCK),
     ))
-    .spawn()?;
+    .build()?;
 
     let _ = fs::remove_dir_all(instance.jailer_workspace_dir().unwrap());
 
@@ -65,7 +65,7 @@ async fn spawn_and_config() -> Result<()> {
     instance
         .put_machine_configuration(&MachineConfiguration {
             cpu_template: None,
-            ht_enabled: None,
+            smt: None,
             mem_size_mib: 1024,
             track_dirty_pages: None,
             vcpu_count: 1,
@@ -105,7 +105,7 @@ async fn basic_launch() -> Result<()> {
     .firecracker_option(Some(
         FirecrackerOption::new(firecracker_bin).api_sock(API_SOCK),
     ))
-    .spawn()?;
+    .build()?;
 
     let _ = fs::remove_dir_all(instance.jailer_workspace_dir().unwrap());
 
@@ -115,7 +115,7 @@ async fn basic_launch() -> Result<()> {
     instance
         .put_machine_configuration(&MachineConfiguration {
             cpu_template: None,
-            ht_enabled: None,
+            smt: None,
             mem_size_mib: 1024,
             track_dirty_pages: None,
             vcpu_count: 1,

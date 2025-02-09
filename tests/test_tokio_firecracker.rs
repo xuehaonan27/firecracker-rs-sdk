@@ -14,7 +14,7 @@ async fn spawn_plain() -> Result<()> {
 
     let mut instance = FirecrackerOption::new(firecracker_bin)
         .api_sock(API_SOCK)
-        .spawn()?;
+        .build()?;
 
     let _ = fs::remove_file(API_SOCK);
     instance.start_vmm().await?;
@@ -37,7 +37,7 @@ async fn spawn_and_config() -> Result<()> {
 
     let mut instance = FirecrackerOption::new(firecracker_bin)
         .api_sock(API_SOCK)
-        .spawn()?;
+        .build()?;
 
     let _ = fs::remove_file(API_SOCK);
     instance.start_vmm().await?;
@@ -46,7 +46,7 @@ async fn spawn_and_config() -> Result<()> {
     instance
         .put_machine_configuration(&MachineConfiguration {
             cpu_template: None,
-            ht_enabled: Some(true),
+            smt: Some(true),
             mem_size_mib: 1024,
             track_dirty_pages: None,
             vcpu_count: 1,
@@ -77,7 +77,7 @@ async fn basic_launch() -> Result<()> {
         .stdin("/dev/null")
         .stdout("/dev/null")
         .stderr("/dev/null")
-        .spawn()?;
+        .build()?;
 
     instance.start_vmm().await?;
 
@@ -85,7 +85,7 @@ async fn basic_launch() -> Result<()> {
     instance
         .put_machine_configuration(&MachineConfiguration {
             cpu_template: None,
-            ht_enabled: None,
+            smt: None,
             mem_size_mib: 1024,
             track_dirty_pages: None,
             vcpu_count: 1,

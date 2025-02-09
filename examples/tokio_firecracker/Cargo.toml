@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-firecracker-sdk = { path = "../../", features = ["_rt-tokio"] }
+firecracker-rs-sdk = { path = "../../", features = ["_rt-tokio"] }
 tokio = { version = "1.43", features = [
     "net",
     "time",
