@@ -1,0 +1,7 @@
+[package]
+name = "std_jailer"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+firecracker-sdk = { path = "../../", features = ["_rt-std"] }

@@ -130,7 +130,7 @@ impl<'f> JailerOption<'f> {
         Ok(jailer_workspace_dir)
     }
 
-    pub fn spawn(&mut self) -> Result<Instance> {
+    pub fn build(&mut self) -> Result<Instance> {
         // spawn instance with jailer
         let mut command = self.build_cmd()?;
 

@@ -104,7 +104,7 @@ impl FirecrackerOption {
         Ok(exec_file_name.into())
     }
 
-    pub fn spawn(&mut self) -> Result<Instance> {
+    pub fn build(&mut self) -> Result<Instance> {
         // spawn instance directly with firecracker
         let mut command = self.build_cmd();
 
@@ -239,8 +239,8 @@ impl FirecrackerOption {
         self
     }
 
-    pub fn boot_timer(&mut self, boot_timer: Option<bool>) -> &mut Self {
-        self.boot_timer = boot_timer;
+    pub fn boot_timer(&mut self) -> &mut Self {
+        self.boot_timer = Some(true);
         self
     }
 
@@ -249,26 +249,21 @@ impl FirecrackerOption {
         self
     }
 
-    pub fn describe_snapshot(&mut self, describe_snapshot: Option<bool>) -> &mut Self {
-        self.describe_snapshot = describe_snapshot;
-        self
-    }
-
     pub fn http_api_max_payload_size(
         &mut self,
-        http_api_max_payload_size: Option<usize>,
+        http_api_max_payload_size: usize,
     ) -> &mut Self {
-        self.http_api_max_payload_size = http_api_max_payload_size;
+        self.http_api_max_payload_size = Some(http_api_max_payload_size);
         self
     }
 
-    pub fn id(&mut self, id: Option<String>) -> &mut Self {
-        self.id = id;
+    pub fn id<S: AsRef<str>>(&mut self, id: S) -> &mut Self {
+        self.id = Some(id.as_ref().to_string());
         self
     }
 
-    pub fn level(&mut self, level: Option<String>) -> &mut Self {
-        self.level = level;
+    pub fn level<S: AsRef<str>>(&mut self, level: S) -> &mut Self {
+        self.level = Some(level.as_ref().to_string());
         self
     }
 
@@ -292,8 +287,8 @@ impl FirecrackerOption {
         self
     }
 
-    pub fn module(&mut self, module: Option<String>) -> &mut Self {
-        self.module = module;
+    pub fn module<S: AsRef<str>>(&mut self, module: S) -> &mut Self {
+        self.module = Some(module.as_ref().to_string());
         self
     }
 
@@ -307,13 +302,13 @@ impl FirecrackerOption {
         self
     }
 
-    pub fn parent_cpu_time_us(&mut self, parent_cpu_time_us: Option<usize>) -> &mut Self {
-        self.parent_cpu_time_us = parent_cpu_time_us;
+    pub fn parent_cpu_time_us(&mut self, parent_cpu_time_us: usize) -> &mut Self {
+        self.parent_cpu_time_us = Some(parent_cpu_time_us);
         self
     }
 
-    pub fn seccomp_filter(&mut self, seccomp_filter: Option<String>) -> &mut Self {
-        self.seccomp_filter = seccomp_filter;
+    pub fn seccomp_filter<S: AsRef<str>>(&mut self, seccomp_filter: S) -> &mut Self {
+        self.seccomp_filter = Some(seccomp_filter.as_ref().to_string());
         self
     }
 
@@ -327,13 +322,13 @@ impl FirecrackerOption {
         self
     }
 
-    pub fn start_time_cpu_us(&mut self, start_time_cpu_us: Option<usize>) -> &mut Self {
-        self.start_time_cpu_us = start_time_cpu_us;
+    pub fn start_time_cpu_us(&mut self, start_time_cpu_us: usize) -> &mut Self {
+        self.start_time_cpu_us = Some(start_time_cpu_us);
         self
     }
 
-    pub fn start_time_us(&mut self, start_time_us: Option<usize>) -> &mut Self {
-        self.start_time_us = start_time_us;
+    pub fn start_time_us(&mut self, start_time_us: usize) -> &mut Self {
+        self.start_time_us = Some(start_time_us);
         self
     }
 

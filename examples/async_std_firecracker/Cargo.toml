@@ -1,0 +1,8 @@
+[package]
+name = "async_std_firecracker"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+firecracker-sdk = { path = "../../", features = ["_rt-async-std"] }
+async-std = { version = "1.13", features = ["attributes"] }

@@ -2,7 +2,7 @@
 
 use std::fs;
 
-use firecracker_sdk::{firecracker::FirecrackerOption, jailer::JailerOption, Result};
+use firecracker_rs_sdk::{firecracker::FirecrackerOption, jailer::JailerOption, Result};
 
 mod common;
 
@@ -23,7 +23,7 @@ fn spawn_plain() -> Result<()> {
     .firecracker_option(Some(
         FirecrackerOption::new(firecracker_bin).api_sock(API_SOCK),
     ))
-    .spawn()?;
+    .build()?;
 
     let _ = fs::remove_dir_all(instance.jailer_workspace_dir().unwrap());
 
@@ -39,7 +39,7 @@ fn spawn_plain() -> Result<()> {
 
 #[test]
 fn spawn_and_config() -> Result<()> {
-    use firecracker_sdk::models::*; // import all models for use
+    use firecracker_rs_sdk::models::*; // import all models for use
 
     const API_SOCK: &'static str = "/run/firecracker.socket";
     let firecracker_bin = &*common::FIRECRACKER;
@@ -56,7 +56,7 @@ fn spawn_and_config() -> Result<()> {
     .firecracker_option(Some(
         FirecrackerOption::new(firecracker_bin).api_sock(API_SOCK),
     ))
-    .spawn()?;
+    .build()?;
 
     let _ = fs::remove_dir_all(instance.jailer_workspace_dir().unwrap());
 
@@ -65,7 +65,7 @@ fn spawn_and_config() -> Result<()> {
     // put some configuration to it
     instance.put_machine_configuration(&MachineConfiguration {
         cpu_template: None,
-        ht_enabled: None,
+        smt: None,
         mem_size_mib: 1024,
         track_dirty_pages: None,
         vcpu_count: 1,
@@ -82,7 +82,7 @@ fn spawn_and_config() -> Result<()> {
 
 #[test]
 fn basic_launch() -> Result<()> {
-    use firecracker_sdk::models::*; // import all models for use
+    use firecracker_rs_sdk::models::*; // import all models for use
 
     const API_SOCK: &'static str = "/run/firecracker.socket";
     let firecracker_bin = &*common::FIRECRACKER;
@@ -105,7 +105,7 @@ fn basic_launch() -> Result<()> {
     .firecracker_option(Some(
         FirecrackerOption::new(firecracker_bin).api_sock(API_SOCK),
     ))
-    .spawn()?;
+    .build()?;
 
     let _ = fs::remove_dir_all(instance.jailer_workspace_dir().unwrap());
 
@@ -114,7 +114,7 @@ fn basic_launch() -> Result<()> {
     // put some configuration to it
     instance.put_machine_configuration(&MachineConfiguration {
         cpu_template: None,
-        ht_enabled: None,
+        smt: None,
         mem_size_mib: 1024,
         track_dirty_pages: None,
         vcpu_count: 1,

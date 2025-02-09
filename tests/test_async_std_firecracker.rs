@@ -2,7 +2,7 @@
 
 use std::fs;
 
-use firecracker_sdk::{firecracker::FirecrackerOption, Result};
+use firecracker_rs_sdk::{firecracker::FirecrackerOption, Result};
 
 mod common;
 
@@ -29,7 +29,7 @@ async fn spawn_plain() -> Result<()> {
 
 #[async_std::test]
 async fn spawn_and_config() -> Result<()> {
-    use firecracker_sdk::models::*; // import all models for use
+    use firecracker_rs_sdk::models::*; // import all models for use
 
     const API_SOCK: &'static str =
         "/tmp/firecracker-sdk-integration-test-async-std-firecracker-spawn-and-config.socket";
@@ -64,7 +64,7 @@ async fn spawn_and_config() -> Result<()> {
 
 #[async_std::test]
 async fn basic_launch() -> Result<()> {
-    use firecracker_sdk::models::*; // import all models for use
+    use firecracker_rs_sdk::models::*; // import all models for use
 
     const API_SOCK: &'static str =
         "/tmp/firecracker-sdk-integration-test-async-std-firecracker-basic-launch.socket";
