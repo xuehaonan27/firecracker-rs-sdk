@@ -8,7 +8,7 @@ pub struct FStack {
 
 pub enum FStackAction {
     RemoveDirectory(PathBuf),
-    RemoveFile(String),
+    RemoveFile(PathBuf),
     TerminateProcess(u32),
 }
 
@@ -26,9 +26,9 @@ impl Drop for FStack {
                     }
                 }
                 FStackAction::RemoveFile(path) => {
-                    info!("FStack: performing `RemoveFile({})`", path);
+                    info!("FStack: performing `RemoveFile({})`", path.display());
                     if let Err(e) = fs::remove_file(&path) {
-                        error!("FStack: fail to remove file {}: {e}", path);
+                        error!("FStack: fail to remove file {}: {e}", path.display());
                         /* We could do nothing on error though... */
                     }
                 }

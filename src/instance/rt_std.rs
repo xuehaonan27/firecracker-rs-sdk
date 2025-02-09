@@ -18,7 +18,6 @@ impl Instance {
         let child = self.command.spawn()?;
         let pid = child.id();
         self.child = Some(child);
-        self.fstack.push_action(FStackAction::TerminateProcess(pid));
 
         // if we should remove jailer workspace directory after using / error
         // and there is a jailer workspace directory configuration (spawn by jailer)
@@ -33,6 +32,8 @@ impl Instance {
         println!("start_vmm connecting to {}", self.socket_on_host.display());
         let socket_agent = SocketAgent::new(&self.socket_on_host, Duration::from_secs(3))?;
         self.agent = Some(socket_agent);
+        self.fstack
+            .push_action(FStackAction::RemoveFile(self.socket_on_host.clone()));
 
         // get pids
         if let Some(ref root) = self.jailer_workspace_dir {
@@ -51,6 +52,10 @@ impl Instance {
             self.jailer_pid = None;
             self.firecracker_pid = Some(pid);
         }
+        // unwrap safe: should be `Some(...)`
+        self.fstack.push_action(FStackAction::TerminateProcess(
+            self.firecracker_pid.unwrap(),
+        ));
 
         Ok(())
     }
