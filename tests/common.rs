@@ -23,3 +23,9 @@ pub(crate) const ROOTFS: LazyLock<String> = LazyLock::new(|| {
 fn load_envs() {
     dotenvy::dotenv().ok();
 }
+
+#[cfg(not(any(feature = "_rt-std", feature = "_rt-async")))]
+#[test]
+fn check_feature() {
+    firecracker_sdk::missing_rt_panic!()
+}
