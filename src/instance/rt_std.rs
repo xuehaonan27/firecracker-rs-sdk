@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{fs, time::Duration};
 
 use crate::{
     agent::SocketAgent,
@@ -30,8 +30,27 @@ impl Instance {
         }
 
         // connect socket
+        println!("start_vmm connecting to {}", self.socket_on_host.display());
         let socket_agent = SocketAgent::new(&self.socket_on_host, Duration::from_secs(3))?;
         self.agent = Some(socket_agent);
+
+        // get pids
+        if let Some(ref root) = self.jailer_workspace_dir {
+            // using jailer
+            let pid_file = root.join(format!("{}.pid", self.exec_file_name.display()));
+            // unwrap safe (1): if there's not pid file, there would not be socket too, then method should have returned because of connection failure.
+            // unwrap safe (2): we should trust `jailer` that the pid file should be sound.
+            let firecracker_pid = fs::read_to_string(pid_file)
+                .unwrap()
+                .parse::<u32>()
+                .unwrap();
+            self.jailer_pid = Some(pid);
+            self.firecracker_pid = Some(firecracker_pid);
+        } else {
+            // bare firecracker
+            self.jailer_pid = None;
+            self.firecracker_pid = Some(pid);
+        }
 
         Ok(())
     }

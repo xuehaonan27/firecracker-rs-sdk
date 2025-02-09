@@ -1,10 +1,14 @@
 //! Option to launch firecracker
 
-use std::{path::PathBuf, process::Command};
+use std::{
+    fs::{File, OpenOptions},
+    path::{Path, PathBuf},
+    process::{Command, Stdio},
+};
 
 use serde::{Deserialize, Serialize};
 
-use crate::instance::Instance;
+use crate::{instance::Instance, Error, Result};
 
 pub const DEFAULT_API_SOCK: &'static str = "/run/firecracker.socket";
 pub const DEFAULT_HTTP_API_MAX_PAYLOAD_SIZE: usize = 51200;
@@ -73,29 +77,70 @@ pub struct FirecrackerOption {
 
     // Process start time (wall clock, microseconds). This parameter is optional.
     start_time_us: Option<usize>,
+
+    // Stdin of the firecracker, ignored when using jailer.
+    stdin: Option<PathBuf>,
+
+    // Stdout of the firecracker, ignored when using jailer.
+    stdout: Option<PathBuf>,
+
+    // Stderr of the firecracker, ignored when using jailer.
+    stderr: Option<PathBuf>,
 }
 
 impl FirecrackerOption {
-    pub fn new(firecracker_bin: PathBuf) -> Self {
+    pub fn new<P: AsRef<Path>>(firecracker_bin: P) -> Self {
         Self {
-            firecracker_bin,
+            firecracker_bin: firecracker_bin.as_ref().into(),
             ..Default::default()
         }
     }
 
-    pub fn spawn(&mut self) -> Instance {
+    fn exec_file_name(&self) -> Result<PathBuf> {
+        let exec_file_name = self
+            .firecracker_bin
+            .file_name()
+            .ok_or_else(|| Error::Configuration("jailer `exec_file` ends with `..`".into()))?;
+        Ok(exec_file_name.into())
+    }
+
+    pub fn spawn(&mut self) -> Result<Instance> {
         // spawn instance directly with firecracker
-        let command = self.build_cmd(None);
+        let mut command = self.build_cmd();
+
+        // Redirect stdin, stdout and stderr
+        if let Some(ref stdin) = self.stdin {
+            command.stdin(Stdio::from(File::open(stdin)?));
+        }
+
+        if let Some(ref stdout) = self.stdout {
+            command.stdout(Stdio::from(
+                OpenOptions::new().create(true).write(true).open(stdout)?,
+            ));
+        }
+
+        if let Some(ref stderr) = self.stderr {
+            command.stderr(Stdio::from(
+                OpenOptions::new().create(true).write(true).open(stderr)?,
+            ));
+        }
 
         let socket_on_host = self
             .api_sock
             .clone()
             .unwrap_or_else(|| DEFAULT_API_SOCK.into());
 
-        Instance::new(socket_on_host, None, None, None, command)
+        Ok(Instance::new(
+            socket_on_host,
+            None,
+            None,
+            None,
+            command,
+            self.exec_file_name()?,
+        ))
     }
 
-    pub(crate) fn build_cmd(&self, jailer_workspace_dir: Option<PathBuf>) -> Command {
+    pub(crate) fn build_cmd(&self) -> Command {
         let mut cmd = Command::new(&self.firecracker_bin);
 
         let api_sock = match self.api_sock {
@@ -103,11 +148,12 @@ impl FirecrackerOption {
             None => &DEFAULT_API_SOCK.into(),
         };
 
-        let api_sock = if let Some(ref jailer_workspace_dir) = jailer_workspace_dir {
-            &jailer_workspace_dir.join(api_sock)
-        } else {
-            api_sock
-        };
+        // let api_sock = if let Some(ref jailer_workspace_dir) = jailer_workspace_dir {
+        //     &jailer_workspace_dir.join(api_sock)
+        // } else {
+        //     api_sock
+        // };
+
         cmd.arg("--api-sock").arg(api_sock);
 
         if let Some(true) = self.boot_timer {
@@ -188,8 +234,8 @@ impl FirecrackerOption {
         cmd
     }
 
-    pub fn api_sock(&mut self, api_sock: Option<PathBuf>) -> &mut Self {
-        self.api_sock = api_sock;
+    pub fn api_sock<P: AsRef<Path>>(&mut self, api_sock: P) -> &mut Self {
+        self.api_sock = Some(api_sock.as_ref().into());
         self
     }
 
@@ -198,8 +244,8 @@ impl FirecrackerOption {
         self
     }
 
-    pub fn config_file(&mut self, config_file: Option<PathBuf>) -> &mut Self {
-        self.config_file = config_file;
+    pub fn config_file<P: AsRef<Path>>(&mut self, config_file: Option<P>) -> &mut Self {
+        self.config_file = config_file.and_then(|x| Some(x.as_ref().to_path_buf()));
         self
     }
 
@@ -226,23 +272,23 @@ impl FirecrackerOption {
         self
     }
 
-    pub fn log_path(&mut self, log_path: Option<PathBuf>) -> &mut Self {
-        self.log_path = log_path;
+    pub fn log_path<P: AsRef<Path>>(&mut self, log_path: Option<P>) -> &mut Self {
+        self.log_path = log_path.and_then(|x| Some(x.as_ref().to_path_buf()));
         self
     }
 
-    pub fn metadata(&mut self, metadata: Option<PathBuf>) -> &mut Self {
-        self.metadata = metadata;
+    pub fn metadata<P: AsRef<Path>>(&mut self, metadata: Option<P>) -> &mut Self {
+        self.metadata = metadata.and_then(|x| Some(x.as_ref().to_path_buf()));
         self
     }
 
-    pub fn metrics_path(&mut self, metrics_path: Option<PathBuf>) -> &mut Self {
-        self.metrics_path = metrics_path;
+    pub fn metrics_path<P: AsRef<Path>>(&mut self, metrics_path: Option<P>) -> &mut Self {
+        self.metrics_path = metrics_path.and_then(|x| Some(x.as_ref().to_path_buf()));
         self
     }
 
-    pub fn mmds_size_limit(&mut self, mmds_size_limit: Option<PathBuf>) -> &mut Self {
-        self.mmds_size_limit = mmds_size_limit;
+    pub fn mmds_size_limit<P: AsRef<Path>>(&mut self, mmds_size_limit: Option<P>) -> &mut Self {
+        self.mmds_size_limit = mmds_size_limit.and_then(|x| Some(x.as_ref().to_path_buf()));
         self
     }
 
@@ -288,6 +334,21 @@ impl FirecrackerOption {
 
     pub fn start_time_us(&mut self, start_time_us: Option<usize>) -> &mut Self {
         self.start_time_us = start_time_us;
+        self
+    }
+
+    pub fn stdin<P: AsRef<Path>>(&mut self, stdin: P) -> &mut Self {
+        self.stdin = Some(stdin.as_ref().into());
+        self
+    }
+
+    pub fn stdout<P: AsRef<Path>>(&mut self, stdout: P) -> &mut Self {
+        self.stdout = Some(stdout.as_ref().into());
+        self
+    }
+
+    pub fn stderr<P: AsRef<Path>>(&mut self, stderr: P) -> &mut Self {
+        self.stderr = Some(stderr.as_ref().into());
         self
     }
 }

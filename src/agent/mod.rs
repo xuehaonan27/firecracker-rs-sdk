@@ -3,12 +3,12 @@ use async_std::{
     io::{ReadExt, WriteExt},
     os::unix::net::UnixStream as AsyncUnixStream,
 };
+#[cfg(feature = "_rt_async")]
+use std::fs;
 #[cfg(feature = "_rt_std")]
 use std::{io::Read, io::Write, os::unix::net::UnixStream as StdUnixStream, time::Instant};
 #[cfg(feature = "_rt_tokio")]
 use tokio::{io::AsyncWriteExt, net::UnixStream as TokioUnixStream};
-#[cfg(feature = "_rt_async")]
-use std::fs;
 
 use std::io::ErrorKind;
 use std::path::Path;
@@ -44,7 +44,7 @@ impl SocketAgent {
                         || e.kind() == ErrorKind::ConnectionRefused =>
                 {
                     if start.elapsed() >= timeout {
-                        return Err(Error::Agent("Connection timed out".into()));
+                        return Err(Error::Agent(format!("Connection timed out: {e}")));
                     }
                     std::thread::sleep(Duration::from_millis(100)); // wait before retry
                 }
@@ -102,7 +102,7 @@ impl SocketAgent {
                 let stream = TokioUnixStream::connect(socket_path).await?;
                 Ok(Self { stream })
             }
-            Err(_) => Err(Error::Agent("Connection timed out".into())),
+            Err(e) => Err(Error::Agent(format!("Connection timed out: {e}"))),
         }
     }
 
@@ -151,7 +151,7 @@ impl SocketAgent {
                 let stream = AsyncUnixStream::connect(socket_path.as_ref().as_os_str()).await?;
                 Ok(Self { stream })
             }
-            Err(_) => Err(Error::Agent("Connection timed out".into())),
+            Err(e) => Err(Error::Agent(format!("Connection timed out: {e}"))),
         }
     }
 
@@ -205,6 +205,7 @@ mod tests {
         os::unix::net::UnixListener,
         path::Path,
         process::Command,
+        sync::LazyLock,
         time::Duration,
     };
 
@@ -216,6 +217,11 @@ mod tests {
     };
 
     use super::SocketAgent;
+
+    const FIRECRACKER: LazyLock<String> = LazyLock::new(|| {
+        dotenvy::dotenv().ok();
+        env::var("FIRECRACKER").unwrap()
+    });
 
     fn echo_server<P: AsRef<Path>>(api_sock: P) -> Result<()> {
         let listener = UnixListener::bind(&api_sock)?;
@@ -261,7 +267,7 @@ mod tests {
             let _ = fs::remove_file(API_SOCK);
         }
 
-        let mut child = Command::new(env::var("FIRECRACKER").unwrap())
+        let mut child = Command::new(&*FIRECRACKER)
             .arg("--api-sock")
             .arg(API_SOCK)
             .spawn()
@@ -288,7 +294,7 @@ mod tests {
 
         let _ = fs::remove_file(API_SOCK);
 
-        let mut child = Command::new(env::var("FIRECRACKER").unwrap())
+        let mut child = Command::new(&*FIRECRACKER)
             .arg("--api-sock")
             .arg(API_SOCK)
             .spawn()
@@ -322,6 +328,11 @@ mod tests {
         models::Empty,
         Result,
     };
+
+    const FIRECRACKER: LazyLock<String> = LazyLock::new(|| {
+        dotenvy::dotenv().ok();
+        env::var("FIRECRACKER").unwrap()
+    });
 
     async fn echo_server<P: AsRef<Path>>(api_sock: P) -> Result<()> {
         let listener = UnixListener::bind(&api_sock)?;
@@ -369,7 +380,7 @@ mod tests {
 
         let _ = fs::remove_file(API_SOCK);
 
-        let mut child = Command::new(env::var("FIRECRACKER").unwrap())
+        let mut child = Command::new(&*FIRECRACKER)
             .arg("--api-sock")
             .arg(API_SOCK)
             .spawn()
@@ -397,7 +408,7 @@ mod tests {
 
         let _ = fs::remove_file(API_SOCK);
 
-        let mut child = Command::new(env::var("FIRECRACKER").unwrap())
+        let mut child = Command::new(&*FIRECRACKER)
             .arg("--api-sock")
             .arg(API_SOCK)
             .spawn()
@@ -434,6 +445,11 @@ mod tests {
         models::Empty,
         Result,
     };
+
+    const FIRECRACKER: LazyLock<String> = LazyLock::new(|| {
+        dotenvy::dotenv().ok();
+        env::var("FIRECRACKER").unwrap()
+    });
 
     async fn echo_server<P: AsRef<Path>>(api_sock: P) -> Result<()> {
         let listener = UnixListener::bind(&api_sock).await?;
@@ -481,7 +497,7 @@ mod tests {
 
         let _ = fs::remove_file(API_SOCK);
 
-        let mut child = Command::new(env::var("FIRECRACKER").unwrap())
+        let mut child = Command::new(&*FIRECRACKER)
             .arg("--api-sock")
             .arg(API_SOCK)
             .spawn()
@@ -505,11 +521,12 @@ mod tests {
 
     #[async_std::test]
     async fn test_get_firecracker_version_event() {
-        const API_SOCK: &'static str = "/tmp/firecracker-sdk-test-agent-async-std-version-event.socket";
+        const API_SOCK: &'static str =
+            "/tmp/firecracker-sdk-test-agent-async-std-version-event.socket";
 
         let _ = fs::remove_file(API_SOCK);
 
-        let mut child = Command::new(env::var("FIRECRACKER").unwrap())
+        let mut child = Command::new(&*FIRECRACKER)
             .arg("--api-sock")
             .arg(API_SOCK)
             .spawn()

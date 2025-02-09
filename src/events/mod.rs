@@ -50,7 +50,7 @@ pub trait RequestTrait {
 /// Trait for decoding an HTTP response into a struct.
 pub trait ResponseTrait {
     /// The type of the payload to be deserialized.
-    type Payload: DeserializeOwned;
+    type Payload: DeserializeOwned + 'static;
 
     /// Get the HTTP response status code
     fn status_code(response: &Vec<u8>) -> Result<u16> {
@@ -87,14 +87,23 @@ pub trait ResponseTrait {
                         .unwrap(),
                 )
             });
-        let Some(content_length) = content_length else {
-            return Err(Error::Event("Bad HTTP response".into()));
-        };
 
-        let body = &response[body_start..(body_start + content_length)];
-        let payload: Self::Payload = serde_json::from_slice(body)
-            .map_err(|e| Error::Event(format!("serde_json decode: {e}")))?;
-        Ok(payload)
+        match content_length {
+            Some(content_length) => {
+                let body = &response[body_start..(body_start + content_length)];
+                let payload: Self::Payload = serde_json::from_slice(body)
+                    .map_err(|e| Error::Event(format!("serde_json decode: {e}")))?;
+                Ok(payload)
+            }
+            None if TypeId::of::<Self::Payload>() == TypeId::of::<Empty>() => {
+                // just no payload, fine
+                // FIXME: ugly to use "null", could there be prettier solution?
+                let payload: Self::Payload = serde_json::from_str("null")
+                    .map_err(|e| Error::Event(format!("serde_json decode: {e}")))?;
+                Ok(payload)
+            }
+            _ => Err(Error::Event("Bad HTTP response".into())),
+        }
     }
 }
 

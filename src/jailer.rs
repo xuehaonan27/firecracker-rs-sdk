@@ -1,9 +1,9 @@
 //! Option to launch jailer
 
 use std::{
-    fs,
+    fs::{self, File, OpenOptions},
     path::{Path, PathBuf},
-    process::Command,
+    process::{Command, Stdio},
 };
 
 use serde::{Deserialize, Serialize};
@@ -68,24 +68,42 @@ pub struct JailerOption<'f> {
 
     // Whether to remove the jailer directory of the instance after using / error.
     remove_jailer_workspace_dir: Option<bool>,
+
+    // Stdin of the jailer
+    stdin: Option<PathBuf>,
+
+    // Stdout of the jailer
+    stdout: Option<PathBuf>,
+
+    // Stderr of the jailer
+    stderr: Option<PathBuf>,
 }
 
 impl<'f> JailerOption<'f> {
-    pub fn new(
-        jailer_bin: PathBuf,
-        exec_file: PathBuf,
-        id: String,
-        gid: usize,
-        uid: usize,
-    ) -> Self {
+    pub fn new<P, Q, S>(jailer_bin: P, exec_file: Q, id: S, gid: usize, uid: usize) -> Self
+    where
+        P: AsRef<Path>,
+        Q: AsRef<Path>,
+        S: AsRef<str>,
+    {
         Self {
-            jailer_bin,
-            exec_file: Some(exec_file),
-            id: Some(id),
+            jailer_bin: jailer_bin.as_ref().into(),
+            exec_file: Some(exec_file.as_ref().into()),
+            id: Some(id.as_ref().into()),
             gid: Some(gid),
             uid: Some(uid),
             ..Default::default()
         }
+    }
+
+    fn exec_file_name(&self) -> Result<PathBuf> {
+        let exec_file_name = self
+            .exec_file
+            .as_ref()
+            .unwrap()
+            .file_name()
+            .ok_or_else(|| Error::Configuration("jailer `exec_file` ends with `..`".into()))?;
+        Ok(exec_file_name.into())
     }
 
     fn jailer_workspace_dir(&self) -> Result<PathBuf> {
@@ -93,12 +111,7 @@ impl<'f> JailerOption<'f> {
             Some(ref chroot_base_dir) => chroot_base_dir,
             None => &PathBuf::from(DEFAULT_CHROOT_BASE_DIR),
         };
-        let exec_file_stem = self
-            .exec_file
-            .as_ref()
-            .unwrap()
-            .file_name()
-            .ok_or_else(|| Error::Configuration("jailer `exec_file` ends with `..`".into()))?;
+        let exec_file_name = self.exec_file_name()?;
         let id = self
             .id
             .as_ref()
@@ -106,7 +119,7 @@ impl<'f> JailerOption<'f> {
             .unwrap_or_else(|| DEFAULT_ID);
         const ROOT_FOLDER_NAME: &'static str = "root";
         let jailer_workspace_dir = chroot_base_dir
-            .join(exec_file_stem)
+            .join(exec_file_name)
             .join(id)
             .join(ROOT_FOLDER_NAME);
 
@@ -119,7 +132,24 @@ impl<'f> JailerOption<'f> {
 
     pub fn spawn(&mut self) -> Result<Instance> {
         // spawn instance with jailer
-        let command = self.build_cmd()?;
+        let mut command = self.build_cmd()?;
+
+        // Redirect stdin, stdout and stderr
+        if let Some(ref stdin) = self.stdin {
+            command.stdin(Stdio::from(File::open(stdin)?));
+        }
+
+        if let Some(ref stdout) = self.stdout {
+            command.stdout(Stdio::from(
+                OpenOptions::new().create(true).write(true).open(stdout)?,
+            ));
+        }
+
+        if let Some(ref stderr) = self.stderr {
+            command.stderr(Stdio::from(
+                OpenOptions::new().create(true).write(true).open(stderr)?,
+            ));
+        }
 
         let jailer_workspace_dir = self.jailer_workspace_dir()?;
         let firecracker_api_sock = match self
@@ -129,7 +159,12 @@ impl<'f> JailerOption<'f> {
             Some(x) => x,
             None => &PathBuf::from(DEFAULT_API_SOCK),
         };
-        let socket_on_host = jailer_workspace_dir.join(firecracker_api_sock);
+        // let socket_on_host = jailer_workspace_dir.join(firecracker_api_sock);
+        // let socket_on_host = self
+        //     .chroot_strategy
+        //     .chroot_path(&jailer_workspace_dir, firecracker_api_sock)?;
+        let socket_on_host = ChrootStrategy::FullLinkStrategy
+            .chroot_path(&jailer_workspace_dir, firecracker_api_sock)?;
 
         Ok(Instance::new(
             socket_on_host,
@@ -137,6 +172,7 @@ impl<'f> JailerOption<'f> {
             Some(self.chroot_strategy.clone()),
             self.remove_jailer_workspace_dir,
             command,
+            self.exec_file_name()?,
         ))
     }
 
@@ -197,15 +233,15 @@ impl<'f> JailerOption<'f> {
         }
 
         if let Some(firecracker_option) = self.firecracker_option {
-            let firecracker_cmd = firecracker_option.build_cmd(Some(self.jailer_workspace_dir()?));
+            let firecracker_cmd = firecracker_option.build_cmd();
             cmd.arg("--").args(firecracker_cmd.get_args());
         }
 
         Ok(cmd)
     }
 
-    pub fn exec_file(&mut self, exec_file: Option<PathBuf>) -> &mut Self {
-        self.exec_file = exec_file;
+    pub fn exec_file<P: AsRef<Path>>(&mut self, exec_file: Option<P>) -> &mut Self {
+        self.exec_file = exec_file.and_then(|x| Some(x.as_ref().to_path_buf()));
         self
     }
 
@@ -234,18 +270,18 @@ impl<'f> JailerOption<'f> {
         self
     }
 
-    pub fn chroot_base_dir(&mut self, chroot_base_dir: Option<PathBuf>) -> &mut Self {
-        self.chroot_base_dir = chroot_base_dir;
+    pub fn chroot_base_dir<P: AsRef<Path>>(&mut self, chroot_base_dir: Option<P>) -> &mut Self {
+        self.chroot_base_dir = chroot_base_dir.and_then(|x| Some(x.as_ref().to_path_buf()));
         self
     }
 
-    pub fn daemonize(&mut self, daemonize: Option<bool>) -> &mut Self {
-        self.daemonize = daemonize;
+    pub fn daemonize(&mut self) -> &mut Self {
+        self.daemonize = Some(true);
         self
     }
 
-    pub fn netns(&mut self, netns: Option<PathBuf>) -> &mut Self {
-        self.netns = netns;
+    pub fn netns<P: AsRef<Path>>(&mut self, netns: Option<P>) -> &mut Self {
+        self.netns = netns.and_then(|x| Some(x.as_ref().to_path_buf()));
         self
     }
 
@@ -281,12 +317,28 @@ impl<'f> JailerOption<'f> {
         self.remove_jailer_workspace_dir = Some(true);
         self
     }
+
+    pub fn stdin<P: AsRef<Path>>(&mut self, stdin: P) -> &mut Self {
+        self.stdin = Some(stdin.as_ref().into());
+        self
+    }
+
+    pub fn stdout<P: AsRef<Path>>(&mut self, stdout: P) -> &mut Self {
+        self.stdout = Some(stdout.as_ref().into());
+        self
+    }
+
+    pub fn stderr<P: AsRef<Path>>(&mut self, stderr: P) -> &mut Self {
+        self.stderr = Some(stderr.as_ref().into());
+        self
+    }
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub enum ChrootStrategy {
     #[default]
     NaiveLinkStrategy,
+    FullLinkStrategy,
 }
 
 impl ChrootStrategy {
@@ -304,19 +356,29 @@ impl ChrootStrategy {
                         .file_name()
                         .ok_or_else(|| Error::Configuration("file name ended with `..`".into()))?,
                 );
-                return Ok(link);
+                Ok(link)
+            }
+            Self::FullLinkStrategy => {
+                let path: &Path = path_on_host.as_ref();
+                let path = if path.is_absolute() {
+                    path.strip_prefix("/").map_err(|e| {
+                        Error::Configuration(format!("Fail to strip prefix `/`: {e}"))
+                    })?
+                } else {
+                    path
+                };
+
+                let link = rootfs.as_ref().join(path);
+                Ok(link)
             }
         }
     }
 
     /// Perform actual link behavior
-    pub fn perform_link<P: AsRef<Path>, Q: AsRef<Path>>(
-        &self,
-        origin: P,
-        link: Q,
-    ) -> Result<()> {
+    pub fn perform_link<P: AsRef<Path>, Q: AsRef<Path>>(&self, origin: P, link: Q) -> Result<()> {
         match self {
             Self::NaiveLinkStrategy => fs::hard_link(origin.as_ref(), &link)?,
+            Self::FullLinkStrategy => fs::hard_link(origin.as_ref(), &link)?,
         }
         Ok(())
     }
@@ -326,19 +388,6 @@ impl ChrootStrategy {
         rootfs: P,
         path_on_host: Q,
     ) -> Result<PathBuf> {
-        // match self {
-        //     Self::NaiveLinkStrategy => {
-        //         let link = rootfs.as_ref().join(
-        //             path_on_host
-        //                 .as_ref()
-        //                 .file_name()
-        //                 .ok_or_else(|| Error::Configuration("file name ended with `..`".into()))?,
-        //         );
-        //         fs::hard_link(path_on_host.as_ref(), &link)?;
-        //         return Ok(link);
-        //     }
-        // }
-
         let link = self.chroot_path(&rootfs, &path_on_host)?;
         self.perform_link(&path_on_host, &link)?;
         Ok(link)
