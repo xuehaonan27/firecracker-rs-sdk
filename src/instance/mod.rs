@@ -5,9 +5,9 @@ use std::{
 
 use crate::{agent::SocketAgent, fstack::FStack, jailer::ChrootStrategy};
 
-#[cfg(feature = "_rt_async")]
+#[cfg(feature = "_rt-async")]
 mod rt_async;
-#[cfg(feature = "_rt_std")]
+#[cfg(feature = "_rt-std")]
 mod rt_std;
 
 pub struct Instance {

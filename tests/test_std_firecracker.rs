@@ -1,4 +1,4 @@
-#![cfg(feature = "_rt_std")]
+#![cfg(feature = "_rt-std")]
 
 use std::fs;
 

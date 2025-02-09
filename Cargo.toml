@@ -4,15 +4,15 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-default = ["_rt_std"]
-_rt_std = []
-_rt_tokio = ["_rt_async"]
-_rt_async_std = ["_rt_async"]
-_rt_async = []
+default = []
+_rt-std = []
+_rt-tokio = ["_rt-async", "tokio"]
+_rt-async-std = ["_rt-async", "async-std"]
+_rt-async = ["async-trait"]
 
 [dependencies]
-async-std = { version = "1.13", features = ["attributes"] }
-async-trait = "0.1"
+async-std = { version = "1.13", features = ["attributes"], optional = true }
+async-trait = { version = "0.1", optional = true }
 bytes = "1.10"
 httparse = "1.10"
 log = "0.4"
@@ -27,8 +27,7 @@ tokio = { version = "1.43", features = [
     "rt",
     "macros",
     "rt-multi-thread",
-] }
-dotenvy = "0.15"
+], optional = true }
 
 [dev-dependencies]
 dotenvy = "0.15"

@@ -1,13 +1,13 @@
-#[cfg(feature = "_rt_async_std")]
+#[cfg(feature = "_rt-async-std")]
 use async_std::{
     io::{ReadExt, WriteExt},
     os::unix::net::UnixStream as AsyncUnixStream,
 };
-#[cfg(feature = "_rt_async")]
+#[cfg(feature = "_rt-async")]
 use std::fs;
-#[cfg(feature = "_rt_std")]
+#[cfg(feature = "_rt-std")]
 use std::{io::Read, io::Write, os::unix::net::UnixStream as StdUnixStream, time::Instant};
-#[cfg(feature = "_rt_tokio")]
+#[cfg(feature = "_rt-tokio")]
 use tokio::{io::AsyncWriteExt, net::UnixStream as TokioUnixStream};
 
 use std::io::ErrorKind;
@@ -20,15 +20,15 @@ use crate::{Error, Result};
 const MAX_BUFFER_SIZE: usize = 64;
 
 pub(crate) struct SocketAgent {
-    #[cfg(feature = "_rt_std")]
+    #[cfg(feature = "_rt-std")]
     stream: StdUnixStream,
-    #[cfg(feature = "_rt_tokio")]
+    #[cfg(feature = "_rt-tokio")]
     stream: TokioUnixStream,
-    #[cfg(feature = "_rt_async_std")]
+    #[cfg(feature = "_rt-async-std")]
     stream: AsyncUnixStream,
 }
 
-#[cfg(feature = "_rt_std")]
+#[cfg(feature = "_rt-std")]
 impl SocketAgent {
     pub(crate) fn new<P: AsRef<Path>>(socket_path: P, timeout: Duration) -> Result<Self> {
         let start = Instant::now();
@@ -91,7 +91,7 @@ impl SocketAgent {
     }
 }
 
-#[cfg(feature = "_rt_tokio")]
+#[cfg(feature = "_rt-tokio")]
 impl SocketAgent {
     pub(crate) async fn new<P: AsRef<Path>>(socket_path: P, timeout: Duration) -> Result<Self> {
         // wait the socket
@@ -140,7 +140,7 @@ impl SocketAgent {
     }
 }
 
-#[cfg(feature = "_rt_async_std")]
+#[cfg(feature = "_rt-async-std")]
 impl SocketAgent {
     pub(crate) async fn new<P: AsRef<Path>>(socket_path: P, timeout: Duration) -> Result<Self> {
         // wait the socket
@@ -184,7 +184,7 @@ impl SocketAgent {
     }
 }
 
-#[cfg(any(feature = "_rt_tokio", feature = "_rt_async_std"))]
+#[cfg(any(feature = "_rt-tokio", feature = "_rt-async-std"))]
 impl SocketAgent {
     pub(crate) async fn event<E: EventTrait>(
         &mut self,
@@ -196,7 +196,7 @@ impl SocketAgent {
     }
 }
 
-#[cfg(feature = "_rt_std")]
+#[cfg(feature = "_rt-std")]
 #[cfg(test)]
 mod tests {
     use std::{
@@ -312,10 +312,10 @@ mod tests {
     }
 }
 
-#[cfg(feature = "_rt_tokio")]
+#[cfg(feature = "_rt-tokio")]
 #[cfg(test)]
 mod tests {
-    use std::{env, fs, path::Path, process::Command, time::Duration};
+    use std::{env, fs, path::Path, process::Command, sync::LazyLock, time::Duration};
 
     use tokio::{
         io::{AsyncReadExt, AsyncWriteExt},
@@ -428,10 +428,10 @@ mod tests {
     }
 }
 
-#[cfg(feature = "_rt_async_std")]
+#[cfg(feature = "_rt-async-std")]
 #[cfg(test)]
 mod tests {
-    use std::{env, fs, process::Command, time::Duration};
+    use std::{env, fs, process::Command, sync::LazyLock, time::Duration};
 
     use async_std::{
         io::{ReadExt, WriteExt},
