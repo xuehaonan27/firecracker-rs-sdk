@@ -12,7 +12,7 @@ pub struct MachineConfiguration {
     /// Flag for enabling/disabling Hyperthreading
     /// Required: true
     #[serde(rename = "smt", skip_serializing_if = "Option::is_none")]
-    pub ht_enabled: Option<bool>,
+    pub smt: Option<bool>,
 
     /// Memory size of VM
     /// Required: true
@@ -38,7 +38,7 @@ pub struct MachineConfiguration {
     /// - None
     /// - 2M
     #[serde(rename = "huge_pages", skip_serializing_if = "Option::is_none")]
-    pub huge_pages: Option<HugePageOption>
+    pub huge_pages: Option<HugePageOption>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]

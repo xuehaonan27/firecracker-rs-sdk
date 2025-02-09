@@ -45,7 +45,7 @@ pub use logger::{LogLevel, Logger};
 pub use machine_configuration::{HugePageOption, MachineConfiguration};
 pub use memory_backend::{BackendType, MemoryBackend};
 pub use metrics::Metrics;
-pub use mmds_config::{MmdsConfig, MmdsContentsObject, Version};
+pub use mmds_config::{MmdsConfig, MmdsContentsObject, MmdsConfigVersion};
 pub use network_interface::NetworkInterface;
 pub use partial_drive::PartialDrive;
 pub use partial_network_interface::PartialNetworkInterface;

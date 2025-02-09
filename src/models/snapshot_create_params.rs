@@ -25,8 +25,9 @@ pub struct SnapshotCreateParams {
     pub version: Option<String>,
 }
 
-#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, Default)]
 pub enum SnapshotType {
+    #[default]
     #[serde(rename = "Full")]
     Full,
     #[serde(rename = "Diff")]

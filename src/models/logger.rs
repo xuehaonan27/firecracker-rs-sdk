@@ -2,12 +2,13 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub enum LogLevel {
     #[serde(rename = "Error")]
     Error,
     #[serde(rename = "Warning")]
     Warning,
+    #[default]
     #[serde(rename = "Info")]
     Info,
     #[serde(rename = "Debug")]

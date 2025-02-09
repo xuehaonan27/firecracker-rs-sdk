@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -10,7 +12,7 @@ pub struct MemoryBackend {
     /// control payload and open file descriptor that it can use to serve this
     /// process's guest memory page faults
     #[serde(rename = "backend_path")]
-    pub backend_path: String,
+    pub backend_path: PathBuf,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]

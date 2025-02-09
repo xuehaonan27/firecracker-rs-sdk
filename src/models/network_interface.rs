@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use serde::{Deserialize, Serialize};
 
 use super::rate_limiter;
@@ -19,7 +21,7 @@ pub struct NetworkInterface {
     /// Host level path for the guest network interface
     /// Required: true
     #[serde(rename = "host_dev_name")]
-    pub host_dev_name: String,
+    pub host_dev_name: PathBuf,
 
     /// iface id
     /// Required: true

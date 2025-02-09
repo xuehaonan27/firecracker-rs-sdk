@@ -58,13 +58,13 @@ pub struct Drive {
     /// Path to the socket of vhost-user-block backend.
     /// This field is required for vhost-user-block config should be omitted for virtio-block configuration.
     #[serde(rename = "socket", skip_serializing_if = "Option::is_none")]
-    pub socket: Option<String>,
+    pub socket: Option<PathBuf>,
 }
 
 /// Block device caching strategies, default to "Unsafe".
 /// Firecracker offers the possiblity of choosing the block device caching strategy.
 /// Caching strategy affects the path data written from inside the microVM takes to the host persistent storage.
-/// 
+///
 /// The caching strategy should be used in order to make a trade-off:
 /// + Unsafe
 /// + + enhances performance as fewer syscalls and IO operations are performed when running workloads
@@ -74,8 +74,11 @@ pub struct Drive {
 /// + + ensures that once a flush request was acknowledged by the host, the data is committed to the backing storage
 /// + + sacrifices performance, from boot time increases to greater emulation-related latencies when running workloads
 /// + + recommended for use cases with low power environments, such as embedded environments
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash, Default,
+)]
 pub enum CacheType {
+    #[default]
     #[serde(rename = "Unsafe")]
     Unsafe,
     #[serde(rename = "WriteBack")]
@@ -95,9 +98,9 @@ pub enum IoEngine {
     #[serde(rename = "Sync")]
     Sync,
     /// Firecracker requires a minimum host kernel version of 5.10.51 for the Async IO engine.
-    /// This requirement is based on the availability of the io_uring subsystem, as well as a 
+    /// This requirement is based on the availability of the io_uring subsystem, as well as a
     /// couple of features and bugfixes that were added in newer kernel versions.
-    /// If a block device is configured with the Async io_engine on a host kernel older than 
+    /// If a block device is configured with the Async io_engine on a host kernel older than
     /// 5.10.51, the API call will return a 400 Bad Request, with a suggestive error message.
     #[serde(rename = "Async")]
     Async,
