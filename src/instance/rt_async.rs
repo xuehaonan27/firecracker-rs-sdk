@@ -13,6 +13,7 @@ use crate::{
 use super::Instance;
 
 impl Instance {
+    /// Start corresponding process `firecracker` / `jailer`
     pub async fn start_vmm(&mut self) -> Result<()> {
         // spawn vmm process
         let child = self.command.spawn()?;
@@ -109,11 +110,13 @@ impl Instance {
         agent.event(event).await
     }
 
+    /// operationId: describeInstance
     pub async fn describe_instance(&mut self) -> Result<InstanceInfo> {
         let agent = check_agent_exists!(self);
         agent.event(DescribeInstance(&Empty)).await
     }
 
+    /// operationId: createSyncAction
     pub async fn create_sync_action(&mut self, action_type: ActionType) -> Result<Empty> {
         let agent = check_agent_exists!(self);
         agent
@@ -121,26 +124,31 @@ impl Instance {
             .await
     }
 
+    /// operationId: describeBalloonConfig
     pub async fn describe_balloon_config(&mut self) -> Result<Balloon> {
         let agent = check_agent_exists!(self);
         agent.event(DescribeBalloonConfig(&Empty)).await
     }
 
+    /// operationId: putBalloon
     pub async fn put_balloon(&mut self, balloon: &Balloon) -> Result<Empty> {
         let agent = check_agent_exists!(self);
         agent.event(PutBalloon(balloon)).await
     }
 
+    /// operationId: patchBalloon
     pub async fn patch_balloon(&mut self, balloon_update: &BalloonUpdate) -> Result<Empty> {
         let agent = check_agent_exists!(self);
         agent.event(PatchBalloon(balloon_update)).await
     }
 
+    /// operationId: describeBalloonStats
     pub async fn describe_balloon_stats(&mut self) -> Result<BalloonStats> {
         let agent = check_agent_exists!(self);
         agent.event(DescribeBalloonStats(&Empty)).await
     }
 
+    /// operationId: patchBalloonStatsInterval
     pub async fn patch_balloon_stats_interval(
         &mut self,
         balloon_stats_update: &BalloonStatsUpdate,
@@ -151,6 +159,7 @@ impl Instance {
             .await
     }
 
+    /// operationId: putGuestBootSource
     pub async fn put_guest_boot_source(&mut self, boot_source: &BootSource) -> Result<Empty> {
         let agent = check_agent_exists!(self);
 
@@ -188,11 +197,13 @@ impl Instance {
         }
     }
 
+    /// operationId: putCpuConfiguration
     pub async fn put_cpu_configuration(&mut self, cpu_config: &CPUConfig) -> Result<Empty> {
         let agent = check_agent_exists!(self);
         agent.event(PutCpuConfiguration(cpu_config)).await
     }
 
+    /// operationId: putGuestDriveByID
     pub async fn put_guest_drive_by_id(&mut self, drive: &Drive) -> Result<Empty> {
         let agent = check_agent_exists!(self);
 
@@ -217,6 +228,7 @@ impl Instance {
         }
     }
 
+    /// operationId: patchGuestDriveByID
     pub async fn patch_guest_drive_by_id(&mut self, partial_drive: &PartialDrive) -> Result<Empty> {
         let agent = check_agent_exists!(self);
 
@@ -243,6 +255,7 @@ impl Instance {
         }
     }
 
+    /// operationId: putLogger
     pub async fn put_logger(&mut self, logger: &Logger) -> Result<Empty> {
         let agent = check_agent_exists!(self);
 
@@ -267,11 +280,13 @@ impl Instance {
         }
     }
 
+    /// operationId: getMachineConfiguration
     pub async fn get_machine_configuration(&mut self) -> Result<MachineConfiguration> {
         let agent = check_agent_exists!(self);
         agent.event(GetMachineConfiguration(&Empty)).await
     }
 
+    /// operationId: putMachineConfiguration
     pub async fn put_machine_configuration(
         &mut self,
         machine_configuration: &MachineConfiguration,
@@ -282,6 +297,7 @@ impl Instance {
             .await
     }
 
+    /// operationId: patchMachineConfiguration
     pub async fn patch_machine_configuration(
         &mut self,
         machine_configuration: &MachineConfiguration,
@@ -292,6 +308,7 @@ impl Instance {
             .await
     }
 
+    /// operationId: putMetrics
     pub async fn put_metrics(&mut self, metrics: &Metrics) -> Result<Empty> {
         let agent = check_agent_exists!(self);
 
@@ -315,31 +332,37 @@ impl Instance {
         }
     }
 
+    /// operationId: putMmds
     pub async fn put_mmds(&mut self, content: &MmdsContentsObject) -> Result<Empty> {
         let agent = check_agent_exists!(self);
         agent.event(PutMmds(content)).await
     }
 
+    /// operationId: patchMmds
     pub async fn patch_mmds(&mut self, content: &MmdsContentsObject) -> Result<Empty> {
         let agent = check_agent_exists!(self);
         agent.event(PatchMmds(content)).await
     }
 
+    /// operationId: getMmds
     pub async fn get_mmds(&mut self) -> Result<MmdsContentsObject> {
         let agent = check_agent_exists!(self);
         agent.event(GetMmds(&Empty)).await
     }
 
+    /// operationId: putMmdsConfig
     pub async fn put_mmds_config(&mut self, mmds_config: &MmdsConfig) -> Result<Empty> {
         let agent = check_agent_exists!(self);
         agent.event(PutMmdsConfig(mmds_config)).await
     }
 
+    /// operationId: putEntropyDevice
     pub async fn put_entropy_device(&mut self, entropy_device: &EntropyDevice) -> Result<Empty> {
         let agent = check_agent_exists!(self);
         agent.event(PutEntropyDevice(entropy_device)).await
     }
 
+    /// operationId: putGuestNetworkInterfaceByID
     pub async fn put_guest_network_interface_by_id(
         &mut self,
         network_interface: &NetworkInterface,
@@ -350,6 +373,7 @@ impl Instance {
             .await
     }
 
+    /// operationId: patchGuestNetworkInterfaceByID
     pub async fn patch_guest_network_interface_by_id(
         &mut self,
         partial_network_interface: &PartialNetworkInterface,
@@ -360,6 +384,7 @@ impl Instance {
             .await
     }
 
+    /// operationId: createSnapshot
     pub async fn create_snapshot(
         &mut self,
         snapshot_create_params: &SnapshotCreateParams,
@@ -395,6 +420,7 @@ impl Instance {
         }
     }
 
+    /// operationId: loadSnapshot
     pub async fn load_snapshot(
         &mut self,
         snapshot_load_params: &SnapshotLoadParams,
@@ -438,21 +464,25 @@ impl Instance {
         }
     }
 
+    /// operationId: getFirecrackerVersion
     pub async fn get_firecracker_version(&mut self) -> Result<FirecrackerVersion> {
         let agent = check_agent_exists!(self);
         agent.event(GetFirecrackerVersion(&Empty)).await
     }
 
+    /// operationId: patchVm
     pub async fn patch_vm(&mut self, vm: &Vm) -> Result<Empty> {
         let agent = check_agent_exists!(self);
         agent.event(PatchVm(vm)).await
     }
 
+    /// operationId: getExportVmConfig
     pub async fn get_export_vm_config(&mut self) -> Result<FullVmConfiguration> {
         let agent = check_agent_exists!(self);
         agent.event(GetExportVmConfig(&Empty)).await
     }
 
+    /// operationId: putGuestVsock
     pub async fn put_guest_vsock(&mut self, vsock: &Vsock) -> Result<Empty> {
         let agent = check_agent_exists!(self);
 

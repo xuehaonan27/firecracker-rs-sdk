@@ -13,6 +13,7 @@ use crate::{
 use super::Instance;
 
 impl Instance {
+    /// Start corresponding process `firecracker` / `jailer`
     pub fn start_vmm(&mut self) -> Result<()> {
         // spawn vmm process
         let child = self.command.spawn()?;
@@ -102,36 +103,43 @@ impl Instance {
         agent.event(event)
     }
 
+    /// operationId: describeInstance
     pub fn describe_instance(&mut self) -> Result<InstanceInfo> {
         let agent = check_agent_exists!(self);
         agent.event(DescribeInstance(&Empty))
     }
 
+    /// operationId: createSyncAction
     pub fn create_sync_action(&mut self, action_type: ActionType) -> Result<Empty> {
         let agent = check_agent_exists!(self);
         agent.event(CreateSyncAction(&InstanceActionInfo { action_type }))
     }
 
+    /// operationId: describeBalloonConfig
     pub fn describe_balloon_config(&mut self) -> Result<Balloon> {
         let agent = check_agent_exists!(self);
         agent.event(DescribeBalloonConfig(&Empty))
     }
 
+    /// operationId: putBalloon
     pub fn put_balloon(&mut self, balloon: &Balloon) -> Result<Empty> {
         let agent = check_agent_exists!(self);
         agent.event(PutBalloon(balloon))
     }
 
+    /// operationId: patchBalloon
     pub fn patch_balloon(&mut self, balloon_update: &BalloonUpdate) -> Result<Empty> {
         let agent = check_agent_exists!(self);
         agent.event(PatchBalloon(balloon_update))
     }
 
+    /// operationId: describeBalloonStats
     pub fn describe_balloon_stats(&mut self) -> Result<BalloonStats> {
         let agent = check_agent_exists!(self);
         agent.event(DescribeBalloonStats(&Empty))
     }
 
+    /// operationId: patchBalloonStatsInterval
     pub fn patch_balloon_stats_interval(
         &mut self,
         balloon_stats_update: &BalloonStatsUpdate,
@@ -140,6 +148,7 @@ impl Instance {
         agent.event(PatchBalloonStatsInterval(balloon_stats_update))
     }
 
+    /// operationId: putGuestBootSource
     pub fn put_guest_boot_source(&mut self, boot_source: &BootSource) -> Result<Empty> {
         let agent = check_agent_exists!(self);
 
@@ -177,11 +186,13 @@ impl Instance {
         }
     }
 
+    /// operationId: putCpuConfiguration
     pub fn put_cpu_configuration(&mut self, cpu_config: &CPUConfig) -> Result<Empty> {
         let agent = check_agent_exists!(self);
         agent.event(PutCpuConfiguration(cpu_config))
     }
 
+    /// operationId: putGuestDriveByID
     pub fn put_guest_drive_by_id(&mut self, drive: &Drive) -> Result<Empty> {
         let agent = check_agent_exists!(self);
 
@@ -206,6 +217,7 @@ impl Instance {
         }
     }
 
+    /// operationId: patchGuestDriveByID
     pub fn patch_guest_drive_by_id(&mut self, partial_drive: &PartialDrive) -> Result<Empty> {
         let agent = check_agent_exists!(self);
 
@@ -232,6 +244,7 @@ impl Instance {
         }
     }
 
+    /// operationId: putLogger
     pub fn put_logger(&mut self, logger: &Logger) -> Result<Empty> {
         let agent = check_agent_exists!(self);
 
@@ -256,11 +269,13 @@ impl Instance {
         }
     }
 
+    /// operationId: getMachineConfiguration
     pub fn get_machine_configuration(&mut self) -> Result<MachineConfiguration> {
         let agent = check_agent_exists!(self);
         agent.event(GetMachineConfiguration(&Empty))
     }
 
+    /// operationId: putMachineConfiguration
     pub fn put_machine_configuration(
         &mut self,
         machine_configuration: &MachineConfiguration,
@@ -269,6 +284,7 @@ impl Instance {
         agent.event(PutMachineConfiguration(&machine_configuration))
     }
 
+    /// operationId: patchMachineConfiguration
     pub fn patch_machine_configuration(
         &mut self,
         machine_configuration: &MachineConfiguration,
@@ -277,6 +293,7 @@ impl Instance {
         agent.event(PatchMachineConfiguration(machine_configuration))
     }
 
+    /// operationId: putMetrics
     pub fn put_metrics(&mut self, metrics: &Metrics) -> Result<Empty> {
         let agent = check_agent_exists!(self);
 
@@ -300,31 +317,37 @@ impl Instance {
         }
     }
 
+    /// operationId: putMmds
     pub fn put_mmds(&mut self, content: &MmdsContentsObject) -> Result<Empty> {
         let agent = check_agent_exists!(self);
         agent.event(PutMmds(content))
     }
 
+    /// operationId: patchMmds
     pub fn patch_mmds(&mut self, content: &MmdsContentsObject) -> Result<Empty> {
         let agent = check_agent_exists!(self);
         agent.event(PatchMmds(content))
     }
 
+    /// operationId: getMmds
     pub fn get_mmds(&mut self) -> Result<MmdsContentsObject> {
         let agent = check_agent_exists!(self);
         agent.event(GetMmds(&Empty))
     }
 
+    /// operationId: putMmdsConfig
     pub fn put_mmds_config(&mut self, mmds_config: &MmdsConfig) -> Result<Empty> {
         let agent = check_agent_exists!(self);
         agent.event(PutMmdsConfig(mmds_config))
     }
 
+    /// operationId: putEntropyDevice
     pub fn put_entropy_device(&mut self, entropy_device: &EntropyDevice) -> Result<Empty> {
         let agent = check_agent_exists!(self);
         agent.event(PutEntropyDevice(entropy_device))
     }
 
+    /// operationId: putGuestNetworkInterfaceByID
     pub fn put_guest_network_interface_by_id(
         &mut self,
         network_interface: &NetworkInterface,
@@ -333,6 +356,7 @@ impl Instance {
         agent.event(PutGuestNetworkInterfaceByID(network_interface))
     }
 
+    /// operationId: patchGuestNetworkInterfaceByID
     pub fn patch_guest_network_interface_by_id(
         &mut self,
         partial_network_interface: &PartialNetworkInterface,
@@ -341,6 +365,7 @@ impl Instance {
         agent.event(PatchGuestNetworkInterfaceByID(partial_network_interface))
     }
 
+    /// operationId: createSnapshot
     pub fn create_snapshot(
         &mut self,
         snapshot_create_params: &SnapshotCreateParams,
@@ -374,6 +399,7 @@ impl Instance {
         }
     }
 
+    /// operationId: loadSnapshot
     pub fn load_snapshot(&mut self, snapshot_load_params: &SnapshotLoadParams) -> Result<Empty> {
         let agent = check_agent_exists!(self);
 
@@ -414,21 +440,25 @@ impl Instance {
         }
     }
 
+    /// operationId: getFirecrackerVersion
     pub fn get_firecracker_version(&mut self) -> Result<FirecrackerVersion> {
         let agent = check_agent_exists!(self);
         agent.event(GetFirecrackerVersion(&Empty))
     }
 
+    /// operationId: patchVm
     pub fn patch_vm(&mut self, vm: &Vm) -> Result<Empty> {
         let agent = check_agent_exists!(self);
         agent.event(PatchVm(vm))
     }
 
+    /// operationId: getExportVmConfig
     pub fn get_export_vm_config(&mut self) -> Result<FullVmConfiguration> {
         let agent = check_agent_exists!(self);
         agent.event(GetExportVmConfig(&Empty))
     }
 
+    /// operationId: putGuestVsock
     pub fn put_guest_vsock(&mut self, vsock: &Vsock) -> Result<Empty> {
         let agent = check_agent_exists!(self);
 
